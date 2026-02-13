@@ -14,6 +14,9 @@ from fastapi.responses import FileResponse
 from lat_lon_parser import parse
 from pydantic import BaseModel, Field
 
+# Force non-GUI backend for server-side rendering (macOS default backend can fail in worker threads).
+os.environ.setdefault("MPLBACKEND", "Agg")
+
 import create_map_poster as cmp
 
 app = FastAPI(title="MapToPoster API", version="1.0.0")
