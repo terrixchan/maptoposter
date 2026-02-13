@@ -1,3 +1,9 @@
 {
-  "desc": "map poster mini app"
+  "desc": "map poster mini app",
+  "rules": [
+    {
+      "action": "allow",
+      "page": "*"
+    }
+  ]
 }
