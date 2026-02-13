@@ -8,14 +8,16 @@ import threading
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
+import matplotlib
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from lat_lon_parser import parse
 from pydantic import BaseModel, Field
 
-# Force non-GUI backend for server-side rendering (macOS default backend can fail in worker threads).
-os.environ.setdefault("MPLBACKEND", "Agg")
+# Force non-GUI backend for server-side rendering.
+os.environ["MPLBACKEND"] = "Agg"
+matplotlib.use("Agg", force=True)
 
 import create_map_poster as cmp
 
