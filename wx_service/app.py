@@ -89,6 +89,68 @@ def theme_details() -> dict[str, list[dict[str, str]]]:
     return {"themes": details}
 
 
+@app.get("/api/location/reverse")
+def reverse_location(
+    latitude: float = Query(..., ge=-90.0, le=90.0),
+    longitude: float = Query(..., ge=-180.0, le=180.0),
+) -> dict[str, str | float]:
+    def _extract_city_country(address: dict[str, str]) -> tuple[str, str]:
+        city = (
+            address.get("city")
+            or address.get("town")
+            or address.get("municipality")
+            or address.get("county")
+            or address.get("state_district")
+            or "Current Location"
+        )
+        country = address.get("country") or "Unknown"
+        return city, country
+
+    try:
+        nominatim = Nominatim(user_agent="city_map_poster_api", timeout=10)
+        location = nominatim.reverse((latitude, longitude), language="en")
+        if location and isinstance(location.raw, dict):
+            address = location.raw.get("address", {})
+            if isinstance(address, dict):
+                city, country = _extract_city_country(address)
+                return {
+                    "city": city,
+                    "country": country,
+                    "latitude": latitude,
+                    "longitude": longitude,
+                }
+    except Exception:  # noqa: BLE001
+        pass
+
+    try:
+        photon = Photon(user_agent="city_map_poster_api", timeout=10)
+        location = photon.reverse((latitude, longitude))
+        if location and isinstance(location.raw, dict):
+            props = location.raw.get("properties", {})
+            city = (
+                props.get("city")
+                or props.get("name")
+                or props.get("county")
+                or "Current Location"
+            )
+            country = props.get("country") or "Unknown"
+            return {
+                "city": str(city),
+                "country": str(country),
+                "latitude": latitude,
+                "longitude": longitude,
+            }
+    except Exception:  # noqa: BLE001
+        pass
+
+    return {
+        "city": "Current Location",
+        "country": "Unknown",
+        "latitude": latitude,
+        "longitude": longitude,
+    }
+
+
 def _resolve_point(city: str, country: str, latitude: str | None, longitude: str | None) -> tuple[float, float]:
     if latitude and longitude:
         return (parse(latitude), parse(longitude))

@@ -6,10 +6,10 @@
     <title>Map Poster H5</title>
     <style>
       :root {
-        --bg: #f3f4f6;
+        --bg: #edf2f5;
         --card: #ffffff;
-        --text: #111827;
-        --muted: #6b7280;
+        --text: #0f172a;
+        --muted: #64748b;
         --primary: #0f766e;
         --primary-hover: #0d5f59;
       }
@@ -19,101 +19,81 @@
       body {
         margin: 0;
         font-family: "SF Pro Text", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
-        background: radial-gradient(circle at top right, #e8f7f5 0%, var(--bg) 45%);
         color: var(--text);
+        background:
+          radial-gradient(circle at 12% 10%, #e0f2f1 0%, transparent 40%),
+          radial-gradient(circle at 90% 90%, #e2e8f0 0%, transparent 45%),
+          var(--bg);
         min-height: 100vh;
-        display: grid;
-        place-items: center;
-        padding: 24px;
+        padding: 20px;
       }
 
       .wrap {
-        width: min(900px, 100%);
+        width: min(980px, 100%);
+        margin: 0 auto;
         display: grid;
         gap: 16px;
       }
 
       .card {
         background: var(--card);
-        border-radius: 14px;
+        border-radius: 16px;
         padding: 18px;
-        box-shadow: 0 10px 30px rgba(17, 24, 39, 0.08);
+        box-shadow: 0 14px 36px rgba(15, 23, 42, 0.08);
       }
 
       .title {
-        margin: 0 0 12px;
-        font-size: 22px;
+        margin: 0;
+        font-size: 32px;
+        letter-spacing: 0.5px;
       }
 
       .hint {
-        margin: 0 0 16px;
+        margin: 10px 0 0;
         color: var(--muted);
-        font-size: 14px;
       }
 
-      .grid {
+      .modules {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 10px;
+        gap: 12px;
       }
 
-      .grid input,
-      .grid select {
+      .module {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 12px;
+      }
+
+      .module-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .module-title {
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      .small {
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      input, select {
         width: 100%;
-        border: 1px solid #d1d5db;
+        border: 1px solid #cbd5e1;
         border-radius: 10px;
         padding: 10px 12px;
         font-size: 14px;
         background: #fff;
       }
 
-      .actions {
-        display: flex;
+      .api-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
         gap: 10px;
-        margin-top: 12px;
-      }
-
-      button {
-        border: 0;
-        border-radius: 10px;
-        padding: 10px 14px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        background: var(--primary);
-        color: #fff;
-      }
-
-      button:hover { background: var(--primary-hover); }
-      button:disabled { opacity: 0.6; cursor: default; }
-
-      .secondary {
-        background: #1f2937;
-      }
-
-      .status {
-        margin-top: 10px;
-        color: var(--muted);
-        min-height: 20px;
-      }
-
-      .theme-preview {
-        margin-top: 12px;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        padding: 10px;
-        background: #fff;
-      }
-
-      .theme-preview-title {
-        font-size: 14px;
-        font-weight: 700;
-      }
-
-      .theme-preview-desc {
-        margin-top: 4px;
-        color: var(--muted);
-        font-size: 13px;
       }
 
       .swatches {
@@ -129,6 +109,46 @@
         height: 28px;
       }
 
+      .range-wrap {
+        margin-top: 10px;
+      }
+
+      .range-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 12px;
+        padding: 10px 16px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        background: var(--primary);
+        color: #fff;
+      }
+
+      button:hover { background: var(--primary-hover); }
+      button:disabled { opacity: 0.55; cursor: default; }
+
+      .secondary { background: #334155; }
+
+      .status {
+        margin-top: 10px;
+        color: var(--muted);
+        min-height: 20px;
+      }
+
       .result img {
         width: 100%;
         border-radius: 12px;
@@ -136,7 +156,8 @@
       }
 
       @media (max-width: 760px) {
-        .grid { grid-template-columns: 1fr 1fr; }
+        .title { font-size: 26px; }
+        .api-row { grid-template-columns: 1fr; }
       }
     </style>
   </head>
@@ -144,36 +165,56 @@
     <div class="wrap">
       <div class="card">
         <h1 class="title">地图海报生成（H5）</h1>
-        <p class="hint">后端地址请先改成你部署的 API 域名（默认示例是本地 8000）。</p>
+        <p class="hint">打开页面后自动获取当前位置，不需要手填城市。你只需要选风格和范围。</p>
 
-        <div class="grid">
-          <input id="apiBase" value="http://127.0.0.1:8000" placeholder="API Base" />
-          <input id="city" value="Tokyo" placeholder="City" />
-          <input id="country" value="Japan" placeholder="Country" />
-          <select id="themeSelect"></select>
-          <input id="distance" value="10000" placeholder="Distance (meters)" />
-          <input id="latitude" value="35.6762" placeholder="Latitude (optional)" />
-          <input id="longitude" value="139.6503" placeholder="Longitude (optional)" />
-        </div>
+        <div class="modules">
+          <div class="module">
+            <div class="module-head">
+              <div class="module-title">模块 1：定位</div>
+              <div id="locationText" class="small">定位中...</div>
+            </div>
+            <div class="api-row">
+              <input id="apiBase" value="http://127.0.0.1:8000" placeholder="API Base" />
+              <button id="locateBtn" class="secondary">重新定位</button>
+            </div>
+          </div>
 
-        <div class="theme-preview">
-          <div id="themeName" class="theme-preview-title">Theme</div>
-          <div id="themeDesc" class="theme-preview-desc"></div>
-          <div class="swatches">
-            <div id="swatchBg" class="swatch" title="Background"></div>
-            <div id="swatchText" class="swatch" title="Text"></div>
-            <div id="swatchWater" class="swatch" title="Water"></div>
-            <div id="swatchParks" class="swatch" title="Parks"></div>
-            <div id="swatchRoadPrimary" class="swatch" title="Road Primary"></div>
-            <div id="swatchRoadSecondary" class="swatch" title="Road Secondary"></div>
+          <div class="module">
+            <div class="module-head">
+              <div class="module-title">模块 2：样式（所见即所得）</div>
+              <div id="themeName" class="small"></div>
+            </div>
+            <select id="themeSelect"></select>
+            <div id="themeDesc" class="small" style="margin-top:6px;"></div>
+            <div class="swatches">
+              <div id="swatchBg" class="swatch" title="Background"></div>
+              <div id="swatchText" class="swatch" title="Text"></div>
+              <div id="swatchWater" class="swatch" title="Water"></div>
+              <div id="swatchParks" class="swatch" title="Parks"></div>
+              <div id="swatchRoadPrimary" class="swatch" title="Road Primary"></div>
+              <div id="swatchRoadSecondary" class="swatch" title="Road Secondary"></div>
+            </div>
+          </div>
+
+          <div class="module">
+            <div class="module-head">
+              <div class="module-title">模块 3：道路密度缩放</div>
+              <div id="distanceText" class="small">10000m</div>
+            </div>
+            <div class="range-wrap">
+              <input id="distanceRange" type="range" min="4000" max="20000" step="1000" value="10000" />
+              <div class="range-labels">
+                <span>更密（4000）</span>
+                <span>更广（20000）</span>
+              </div>
+            </div>
           </div>
         </div>
 
         <div class="actions">
-          <button id="generateBtn">生成海报</button>
+          <button id="generateBtn" disabled>生成海报</button>
           <button id="downloadBtn" class="secondary" disabled>下载图片</button>
         </div>
-
         <div id="status" class="status"></div>
       </div>
 
@@ -185,16 +226,9 @@
     <script>
       const el = {
         apiBase: document.getElementById('apiBase'),
-        city: document.getElementById('city'),
-        country: document.getElementById('country'),
+        locateBtn: document.getElementById('locateBtn'),
+        locationText: document.getElementById('locationText'),
         themeSelect: document.getElementById('themeSelect'),
-        distance: document.getElementById('distance'),
-        latitude: document.getElementById('latitude'),
-        longitude: document.getElementById('longitude'),
-        generateBtn: document.getElementById('generateBtn'),
-        downloadBtn: document.getElementById('downloadBtn'),
-        status: document.getElementById('status'),
-        poster: document.getElementById('poster'),
         themeName: document.getElementById('themeName'),
         themeDesc: document.getElementById('themeDesc'),
         swatchBg: document.getElementById('swatchBg'),
@@ -202,11 +236,18 @@
         swatchWater: document.getElementById('swatchWater'),
         swatchParks: document.getElementById('swatchParks'),
         swatchRoadPrimary: document.getElementById('swatchRoadPrimary'),
-        swatchRoadSecondary: document.getElementById('swatchRoadSecondary')
+        swatchRoadSecondary: document.getElementById('swatchRoadSecondary'),
+        distanceRange: document.getElementById('distanceRange'),
+        distanceText: document.getElementById('distanceText'),
+        generateBtn: document.getElementById('generateBtn'),
+        downloadBtn: document.getElementById('downloadBtn'),
+        status: document.getElementById('status'),
+        poster: document.getElementById('poster')
       };
 
       let imageBlobUrl = '';
       let themeDetails = [];
+      let currentLocation = null;
 
       function setStatus(msg) {
         el.status.textContent = msg;
@@ -225,7 +266,6 @@
       function updateThemePreview(themeId) {
         const t = themeDetails.find((item) => item.id === themeId);
         if (!t) return;
-
         el.themeName.textContent = `${t.name} (${t.id})`;
         el.themeDesc.textContent = t.description || 'No description';
         el.swatchBg.style.background = t.bg;
@@ -254,28 +294,83 @@
             option.textContent = `${t.name} (${t.id})`;
             el.themeSelect.appendChild(option);
           }
-
           const defaultTheme = themeDetails.find((t) => t.id === 'terracotta') || themeDetails[0];
           el.themeSelect.value = defaultTheme.id;
           updateThemePreview(defaultTheme.id);
         } catch (err) {
           el.themeSelect.innerHTML = '<option value="terracotta">terracotta</option>';
-          themeDetails = [];
           setStatus(`主题加载失败：${err.message || err}`);
         }
       }
 
+      async function reverseCity(lat, lon) {
+        const apiBase = el.apiBase.value.trim().replace(/\/$/, '');
+        const url = `${apiBase}/api/location/reverse?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      }
+
+      async function locateUser() {
+        if (!navigator.geolocation) {
+          setStatus('当前浏览器不支持定位。');
+          return;
+        }
+        el.generateBtn.disabled = true;
+        el.locationText.textContent = '定位中...';
+        setStatus('正在获取定位...');
+
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            try {
+              const place = await reverseCity(lat, lon);
+              currentLocation = {
+                city: place.city || 'Current Location',
+                country: place.country || 'Unknown',
+                latitude: lat,
+                longitude: lon
+              };
+              el.locationText.textContent = `${currentLocation.city}, ${currentLocation.country}`;
+              el.generateBtn.disabled = false;
+              setStatus('定位成功，可以生成海报。');
+            } catch (err) {
+              currentLocation = {
+                city: 'Current Location',
+                country: 'Unknown',
+                latitude: lat,
+                longitude: lon
+              };
+              el.locationText.textContent = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+              el.generateBtn.disabled = false;
+              setStatus('定位成功（城市解析失败，已使用坐标）。');
+            }
+          },
+          (error) => {
+            const msg = error && error.message ? error.message : '定位失败';
+            el.locationText.textContent = '未定位';
+            setStatus(`定位失败：${msg}。请允许浏览器定位权限。`);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 12000,
+            maximumAge: 30000
+          }
+        );
+      }
+
       async function generate() {
         const apiBase = el.apiBase.value.trim().replace(/\/$/, '');
-        const city = el.city.value.trim();
-        const country = el.country.value.trim();
         const theme = el.themeSelect.value || 'terracotta';
-        const distance = el.distance.value.trim() || '10000';
-        const latitude = el.latitude.value.trim();
-        const longitude = el.longitude.value.trim();
+        const distance = el.distanceRange.value || '10000';
 
-        if (!apiBase || !city || !country) {
-          setStatus('请填写 API、城市和国家。');
+        if (!apiBase) {
+          setStatus('请填写 API 地址。');
+          return;
+        }
+        if (!currentLocation) {
+          setStatus('尚未完成定位。');
           return;
         }
 
@@ -283,10 +378,7 @@
         el.generateBtn.disabled = true;
         setStatus('生成中，请稍候...');
 
-        let url = `${apiBase}/api/posters/generate?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&theme=${encodeURIComponent(theme)}&distance=${encodeURIComponent(distance)}&fmt=png`;
-        if (latitude && longitude) {
-          url += `&latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}`;
-        }
+        const url = `${apiBase}/api/posters/generate?city=${encodeURIComponent(currentLocation.city)}&country=${encodeURIComponent(currentLocation.country)}&theme=${encodeURIComponent(theme)}&distance=${encodeURIComponent(distance)}&fmt=png&latitude=${encodeURIComponent(currentLocation.latitude)}&longitude=${encodeURIComponent(currentLocation.longitude)}`;
 
         try {
           const res = await fetch(url);
@@ -300,7 +392,7 @@
           el.poster.src = imageBlobUrl;
           el.poster.style.display = 'block';
           el.downloadBtn.disabled = false;
-          setStatus('生成成功。');
+          setStatus(`生成成功：${currentLocation.city}`);
         } catch (err) {
           setStatus(`生成失败：${err.message || err}`);
         } finally {
@@ -308,11 +400,16 @@
         }
       }
 
-      el.generateBtn.addEventListener('click', generate);
       el.themeSelect.addEventListener('change', () => {
         updateThemePreview(el.themeSelect.value);
       });
-      el.apiBase.addEventListener('blur', loadThemes);
+
+      el.distanceRange.addEventListener('input', () => {
+        el.distanceText.textContent = `${el.distanceRange.value}m`;
+      });
+
+      el.locateBtn.addEventListener('click', locateUser);
+      el.generateBtn.addEventListener('click', generate);
       el.downloadBtn.addEventListener('click', () => {
         if (!imageBlobUrl) return;
         const a = document.createElement('a');
@@ -320,8 +417,12 @@
         a.download = 'map-poster.png';
         a.click();
       });
+      el.apiBase.addEventListener('blur', async () => {
+        await loadThemes();
+        await locateUser();
+      });
 
-      loadThemes();
+      loadThemes().then(locateUser);
     </script>
   </body>
 </html>
