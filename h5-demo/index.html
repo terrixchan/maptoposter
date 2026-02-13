@@ -57,12 +57,14 @@
         gap: 10px;
       }
 
-      .grid input {
+      .grid input,
+      .grid select {
         width: 100%;
         border: 1px solid #d1d5db;
         border-radius: 10px;
         padding: 10px 12px;
         font-size: 14px;
+        background: #fff;
       }
 
       .actions {
@@ -95,6 +97,38 @@
         min-height: 20px;
       }
 
+      .theme-preview {
+        margin-top: 12px;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 10px;
+        background: #fff;
+      }
+
+      .theme-preview-title {
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .theme-preview-desc {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .swatches {
+        margin-top: 8px;
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 8px;
+      }
+
+      .swatch {
+        border-radius: 10px;
+        border: 1px solid #d1d5db;
+        height: 28px;
+      }
+
       .result img {
         width: 100%;
         border-radius: 12px;
@@ -116,9 +150,22 @@
           <input id="apiBase" value="http://127.0.0.1:8000" placeholder="API Base" />
           <input id="city" value="Tokyo" placeholder="City" />
           <input id="country" value="Japan" placeholder="Country" />
-          <input id="theme" value="terracotta" placeholder="Theme" />
+          <select id="themeSelect"></select>
           <input id="latitude" value="35.6762" placeholder="Latitude (optional)" />
           <input id="longitude" value="139.6503" placeholder="Longitude (optional)" />
+        </div>
+
+        <div class="theme-preview">
+          <div id="themeName" class="theme-preview-title">Theme</div>
+          <div id="themeDesc" class="theme-preview-desc"></div>
+          <div class="swatches">
+            <div id="swatchBg" class="swatch" title="Background"></div>
+            <div id="swatchText" class="swatch" title="Text"></div>
+            <div id="swatchWater" class="swatch" title="Water"></div>
+            <div id="swatchParks" class="swatch" title="Parks"></div>
+            <div id="swatchRoadPrimary" class="swatch" title="Road Primary"></div>
+            <div id="swatchRoadSecondary" class="swatch" title="Road Secondary"></div>
+          </div>
         </div>
 
         <div class="actions">
@@ -139,16 +186,25 @@
         apiBase: document.getElementById('apiBase'),
         city: document.getElementById('city'),
         country: document.getElementById('country'),
-        theme: document.getElementById('theme'),
+        themeSelect: document.getElementById('themeSelect'),
         latitude: document.getElementById('latitude'),
         longitude: document.getElementById('longitude'),
         generateBtn: document.getElementById('generateBtn'),
         downloadBtn: document.getElementById('downloadBtn'),
         status: document.getElementById('status'),
-        poster: document.getElementById('poster')
+        poster: document.getElementById('poster'),
+        themeName: document.getElementById('themeName'),
+        themeDesc: document.getElementById('themeDesc'),
+        swatchBg: document.getElementById('swatchBg'),
+        swatchText: document.getElementById('swatchText'),
+        swatchWater: document.getElementById('swatchWater'),
+        swatchParks: document.getElementById('swatchParks'),
+        swatchRoadPrimary: document.getElementById('swatchRoadPrimary'),
+        swatchRoadSecondary: document.getElementById('swatchRoadSecondary')
       };
 
       let imageBlobUrl = '';
+      let themeDetails = [];
 
       function setStatus(msg) {
         el.status.textContent = msg;
@@ -164,11 +220,54 @@
         el.downloadBtn.disabled = true;
       }
 
+      function updateThemePreview(themeId) {
+        const t = themeDetails.find((item) => item.id === themeId);
+        if (!t) return;
+
+        el.themeName.textContent = `${t.name} (${t.id})`;
+        el.themeDesc.textContent = t.description || 'No description';
+        el.swatchBg.style.background = t.bg;
+        el.swatchText.style.background = t.text;
+        el.swatchWater.style.background = t.water;
+        el.swatchParks.style.background = t.parks;
+        el.swatchRoadPrimary.style.background = t.road_primary;
+        el.swatchRoadSecondary.style.background = t.road_secondary;
+      }
+
+      async function loadThemes() {
+        const apiBase = el.apiBase.value.trim().replace(/\/$/, '');
+        if (!apiBase) return;
+
+        try {
+          const res = await fetch(`${apiBase}/api/themes/details`);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          themeDetails = Array.isArray(data.themes) ? data.themes : [];
+          if (!themeDetails.length) throw new Error('No themes');
+
+          el.themeSelect.innerHTML = '';
+          for (const t of themeDetails) {
+            const option = document.createElement('option');
+            option.value = t.id;
+            option.textContent = `${t.name} (${t.id})`;
+            el.themeSelect.appendChild(option);
+          }
+
+          const defaultTheme = themeDetails.find((t) => t.id === 'terracotta') || themeDetails[0];
+          el.themeSelect.value = defaultTheme.id;
+          updateThemePreview(defaultTheme.id);
+        } catch (err) {
+          el.themeSelect.innerHTML = '<option value="terracotta">terracotta</option>';
+          themeDetails = [];
+          setStatus(`主题加载失败：${err.message || err}`);
+        }
+      }
+
       async function generate() {
         const apiBase = el.apiBase.value.trim().replace(/\/$/, '');
         const city = el.city.value.trim();
         const country = el.country.value.trim();
-        const theme = el.theme.value.trim() || 'terracotta';
+        const theme = el.themeSelect.value || 'terracotta';
         const latitude = el.latitude.value.trim();
         const longitude = el.longitude.value.trim();
 
@@ -207,6 +306,10 @@
       }
 
       el.generateBtn.addEventListener('click', generate);
+      el.themeSelect.addEventListener('change', () => {
+        updateThemePreview(el.themeSelect.value);
+      });
+      el.apiBase.addEventListener('blur', loadThemes);
       el.downloadBtn.addEventListener('click', () => {
         if (!imageBlobUrl) return;
         const a = document.createElement('a');
@@ -214,6 +317,8 @@
         a.download = 'map-poster.png';
         a.click();
       });
+
+      loadThemes();
     </script>
   </body>
 </html>

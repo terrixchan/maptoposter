@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import json
 import os
 import threading
 from pathlib import Path
@@ -58,6 +59,34 @@ def health() -> dict[str, str]:
 @app.get("/api/themes")
 def themes() -> dict[str, list[str]]:
     return {"themes": cmp.get_available_themes()}
+
+
+@app.get("/api/themes/details")
+def theme_details() -> dict[str, list[dict[str, str]]]:
+    details: list[dict[str, str]] = []
+    for theme_name in cmp.get_available_themes():
+        theme_path = Path(cmp.THEMES_DIR) / f"{theme_name}.json"
+        try:
+            with open(theme_path, "r", encoding=cmp.FILE_ENCODING) as f:
+                data = json.load(f)
+        except Exception:  # noqa: BLE001
+            continue
+
+        details.append(
+            {
+                "id": theme_name,
+                "name": data.get("name", theme_name),
+                "description": data.get("description", ""),
+                "bg": data.get("bg", "#ffffff"),
+                "text": data.get("text", "#111111"),
+                "water": data.get("water", "#9ec5fe"),
+                "parks": data.get("parks", "#9fd7a6"),
+                "road_primary": data.get("road_primary", "#5f6b7a"),
+                "road_secondary": data.get("road_secondary", "#8a95a3"),
+            }
+        )
+
+    return {"themes": details}
 
 
 def _resolve_point(city: str, country: str, latitude: str | None, longitude: str | None) -> tuple[float, float]:
