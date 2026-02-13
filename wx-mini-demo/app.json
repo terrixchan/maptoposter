@@ -13,6 +13,9 @@
       "desc": "用于获取当前位置生成地图海报"
     }
   },
+  "requiredPrivateInfos": [
+    "getLocation"
+  ],
   "style": "v2",
   "sitemapLocation": "sitemap.json"
 }
