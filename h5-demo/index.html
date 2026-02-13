@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Map Poster H5</title>
+    <style>
+      :root {
+        --bg: #f3f4f6;
+        --card: #ffffff;
+        --text: #111827;
+        --muted: #6b7280;
+        --primary: #0f766e;
+        --primary-hover: #0d5f59;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: "SF Pro Text", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+        background: radial-gradient(circle at top right, #e8f7f5 0%, var(--bg) 45%);
+        color: var(--text);
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+
+      .wrap {
+        width: min(900px, 100%);
+        display: grid;
+        gap: 16px;
+      }
+
+      .card {
+        background: var(--card);
+        border-radius: 14px;
+        padding: 18px;
+        box-shadow: 0 10px 30px rgba(17, 24, 39, 0.08);
+      }
+
+      .title {
+        margin: 0 0 12px;
+        font-size: 22px;
+      }
+
+      .hint {
+        margin: 0 0 16px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .grid input {
+        width: 100%;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: 14px;
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        background: var(--primary);
+        color: #fff;
+      }
+
+      button:hover { background: var(--primary-hover); }
+      button:disabled { opacity: 0.6; cursor: default; }
+
+      .secondary {
+        background: #1f2937;
+      }
+
+      .status {
+        margin-top: 10px;
+        color: var(--muted);
+        min-height: 20px;
+      }
+
+      .result img {
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+      }
+
+      @media (max-width: 760px) {
+        .grid { grid-template-columns: 1fr 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <h1 class="title">地图海报生成（H5）</h1>
+        <p class="hint">后端地址请先改成你部署的 API 域名（默认示例是本地 8000）。</p>
+
+        <div class="grid">
+          <input id="apiBase" value="http://127.0.0.1:8000" placeholder="API Base" />
+          <input id="city" value="Tokyo" placeholder="City" />
+          <input id="country" value="Japan" placeholder="Country" />
+          <input id="theme" value="terracotta" placeholder="Theme" />
+        </div>
+
+        <div class="actions">
+          <button id="generateBtn">生成海报</button>
+          <button id="downloadBtn" class="secondary" disabled>下载图片</button>
+        </div>
+
+        <div id="status" class="status"></div>
+      </div>
+
+      <div class="card result">
+        <img id="poster" alt="poster" style="display:none" />
+      </div>
+    </div>
+
+    <script>
+      const el = {
+        apiBase: document.getElementById('apiBase'),
+        city: document.getElementById('city'),
+        country: document.getElementById('country'),
+        theme: document.getElementById('theme'),
+        generateBtn: document.getElementById('generateBtn'),
+        downloadBtn: document.getElementById('downloadBtn'),
+        status: document.getElementById('status'),
+        poster: document.getElementById('poster')
+      };
+
+      let imageBlobUrl = '';
+
+      function setStatus(msg) {
+        el.status.textContent = msg;
+      }
+
+      function resetImage() {
+        if (imageBlobUrl) {
+          URL.revokeObjectURL(imageBlobUrl);
+          imageBlobUrl = '';
+        }
+        el.poster.style.display = 'none';
+        el.poster.src = '';
+        el.downloadBtn.disabled = true;
+      }
+
+      async function generate() {
+        const apiBase = el.apiBase.value.trim().replace(/\/$/, '');
+        const city = el.city.value.trim();
+        const country = el.country.value.trim();
+        const theme = el.theme.value.trim() || 'terracotta';
+
+        if (!apiBase || !city || !country) {
+          setStatus('请填写 API、城市和国家。');
+          return;
+        }
+
+        resetImage();
+        el.generateBtn.disabled = true;
+        setStatus('生成中，请稍候...');
+
+        const url = `${apiBase}/api/posters/generate?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&theme=${encodeURIComponent(theme)}&fmt=png`;
+
+        try {
+          const res = await fetch(url);
+          if (!res.ok) {
+            const text = await res.text();
+            throw new Error(`HTTP ${res.status}: ${text}`);
+          }
+
+          const blob = await res.blob();
+          imageBlobUrl = URL.createObjectURL(blob);
+          el.poster.src = imageBlobUrl;
+          el.poster.style.display = 'block';
+          el.downloadBtn.disabled = false;
+          setStatus('生成成功。');
+        } catch (err) {
+          setStatus(`生成失败：${err.message || err}`);
+        } finally {
+          el.generateBtn.disabled = false;
+        }
+      }
+
+      el.generateBtn.addEventListener('click', generate);
+      el.downloadBtn.addEventListener('click', () => {
+        if (!imageBlobUrl) return;
+        const a = document.createElement('a');
+        a.href = imageBlobUrl;
+        a.download = 'map-poster.png';
+        a.click();
+      });
+    </script>
+  </body>
+</html>
