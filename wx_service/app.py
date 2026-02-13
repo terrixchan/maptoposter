@@ -9,6 +9,7 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from lat_lon_parser import parse
 from pydantic import BaseModel, Field
@@ -17,6 +18,17 @@ import create_map_poster as cmp
 
 app = FastAPI(title="MapToPoster API", version="1.0.0")
 _generation_lock = threading.Lock()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://127.0.0.1:5173",
+        "http://localhost:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class PosterBase64Request(BaseModel):
