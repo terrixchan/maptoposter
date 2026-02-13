@@ -8,6 +8,11 @@
     "navigationBarTextStyle": "black",
     "backgroundColor": "#f1f5f9"
   },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于获取当前位置生成地图海报"
+    }
+  },
   "style": "v2",
   "sitemapLocation": "sitemap.json"
 }
