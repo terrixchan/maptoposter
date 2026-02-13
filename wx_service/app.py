@@ -12,6 +12,7 @@ import matplotlib
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from geopy.geocoders import Photon
 from lat_lon_parser import parse
 from pydantic import BaseModel, Field
 
@@ -60,12 +61,29 @@ def themes() -> dict[str, list[str]]:
 
 
 def _resolve_point(city: str, country: str, latitude: str | None, longitude: str | None) -> tuple[float, float]:
+    if latitude and longitude:
+        return (parse(latitude), parse(longitude))
+
     try:
-        if latitude and longitude:
-            return (parse(latitude), parse(longitude))
         return cmp.get_coordinates(city, country)
-    except Exception as exc:  # noqa: BLE001
-        raise HTTPException(status_code=400, detail=f"Failed to resolve coordinates: {exc}") from exc
+    except Exception as nominatim_exc:  # noqa: BLE001
+        # Fallback provider when Nominatim is rate-limited/unavailable.
+        try:
+            geolocator = Photon(user_agent="city_map_poster", timeout=10)
+            location = geolocator.geocode(f"{city}, {country}")
+            if location:
+                return (float(location.latitude), float(location.longitude))
+        except Exception:  # noqa: BLE001
+            pass
+
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Failed to resolve coordinates from geocoding providers. "
+                f"Last error: {nominatim_exc}. "
+                "Please input latitude/longitude manually."
+            ),
+        ) from nominatim_exc
 
 
 @app.get("/api/posters/generate")
