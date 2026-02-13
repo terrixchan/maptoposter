@@ -13,7 +13,7 @@ import matplotlib
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from geopy.geocoders import Photon
+from geopy.geocoders import Nominatim, Photon
 from lat_lon_parser import parse
 from pydantic import BaseModel, Field
 
@@ -93,15 +93,34 @@ def _resolve_point(city: str, country: str, latitude: str | None, longitude: str
     if latitude and longitude:
         return (parse(latitude), parse(longitude))
 
+    # Prefer downtown-like queries to avoid selecting sparse administrative centroids.
+    center_queries = [
+        f"{city} city center, {country}",
+        f"{city} downtown, {country}",
+        f"{city} center, {country}",
+        f"{city} 市中心, {country}",
+        f"{city} 中心, {country}",
+    ]
+
+    nominatim = Nominatim(user_agent="city_map_poster_api", timeout=10)
+    for query in center_queries:
+        try:
+            location = nominatim.geocode(query)
+            if location:
+                return (float(location.latitude), float(location.longitude))
+        except Exception:  # noqa: BLE001
+            continue
+
     try:
         return cmp.get_coordinates(city, country)
     except Exception as nominatim_exc:  # noqa: BLE001
         # Fallback provider when Nominatim is rate-limited/unavailable.
         try:
             geolocator = Photon(user_agent="city_map_poster", timeout=10)
-            location = geolocator.geocode(f"{city}, {country}")
-            if location:
-                return (float(location.latitude), float(location.longitude))
+            for query in center_queries + [f"{city}, {country}"]:
+                location = geolocator.geocode(query)
+                if location:
+                    return (float(location.latitude), float(location.longitude))
         except Exception:  # noqa: BLE001
             pass
 
