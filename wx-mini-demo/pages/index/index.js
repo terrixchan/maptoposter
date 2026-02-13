@@ -1,6 +1,34 @@
 const CLOUD_ENV_ID = "cloud1-6gov01mkc0cce40b";
 const CLOUD_SERVICE = "cloud1";
 
+function safeJsonParse(text) {
+  try {
+    return JSON.parse(text);
+  } catch (_e) {
+    return text;
+  }
+}
+
+function unwrapContainerResponse(res) {
+  if (!res) return null;
+
+  // Common shape: { statusCode, data, header, errMsg }
+  let payload = res.data;
+  if (typeof payload === "string") {
+    payload = safeJsonParse(payload);
+  }
+
+  // Some gateways wrap business payload again in `data`
+  if (payload && typeof payload === "object" && payload.data !== undefined) {
+    const nested = payload.data;
+    if (typeof nested === "string") {
+      return safeJsonParse(nested);
+    }
+    return nested;
+  }
+  return payload;
+}
+
 function callContainer({ path, method = "GET", data = null }) {
   return new Promise((resolve, reject) => {
     wx.cloud.callContainer({
@@ -14,7 +42,14 @@ function callContainer({ path, method = "GET", data = null }) {
         "content-type": "application/json",
       },
       data,
-      success: (res) => resolve(res.data),
+      success: (res) => {
+        const business = unwrapContainerResponse(res);
+        if (res.statusCode && res.statusCode >= 400) {
+          reject(new Error(`HTTP ${res.statusCode}: ${JSON.stringify(business)}`));
+          return;
+        }
+        resolve(business);
+      },
       fail: reject,
     });
   });
@@ -81,7 +116,7 @@ Page({
       });
     } catch (error) {
       this.setData({
-        statusText: `主题加载失败：${error.errMsg || error.message || error}`,
+        statusText: `主题加载失败：${error.errMsg || error.message || JSON.stringify(error)}`,
       });
     }
   },
@@ -200,8 +235,8 @@ Page({
         },
       });
 
-      if (!result.image_base64) {
-        throw new Error("No image returned");
+      if (!result || !result.image_base64) {
+        throw new Error(`No image returned: ${JSON.stringify(result)}`);
       }
 
       const posterPath = `data:${result.mime_type || "image/png"};base64,${result.image_base64}`;
@@ -212,7 +247,7 @@ Page({
       });
     } catch (error) {
       this.setData({
-        statusText: `生成失败：${error.errMsg || error.message || error}`,
+        statusText: `生成失败：${error.errMsg || error.message || JSON.stringify(error)}`,
       });
     } finally {
       this.setData({ loading: false });
