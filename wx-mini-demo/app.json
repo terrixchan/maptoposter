@@ -1,0 +1,10 @@
+{
+  "pages": [
+    "pages/index/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "Map Poster"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

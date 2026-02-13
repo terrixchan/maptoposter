@@ -1,0 +1,16 @@
+<view class="container">
+  <view class="card">
+    <view class="title">Map Poster 生成</view>
+
+    <input class="input" placeholder="城市，例如: Tokyo" value="{{city}}" bindinput="onCityInput" />
+    <input class="input" placeholder="国家，例如: Japan" value="{{country}}" bindinput="onCountryInput" />
+    <input class="input" placeholder="主题，例如: terracotta" value="{{theme}}" bindinput="onThemeInput" />
+
+    <button class="btn" loading="{{loading}}" bindtap="onGenerate">生成海报</button>
+  </view>
+
+  <view wx:if="{{posterPath}}" class="result">
+    <image class="poster" src="{{posterPath}}" mode="widthFix" />
+    <button class="btn secondary" bindtap="onSave">保存到相册</button>
+  </view>
+</view>
