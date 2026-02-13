@@ -6,10 +6,12 @@ import base64
 import json
 import os
 import threading
+from functools import lru_cache
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 import matplotlib
+from matplotlib import font_manager as fm
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -49,6 +51,49 @@ class PosterBase64Request(BaseModel):
     display_country: str | None = None
     latitude: str | None = None
     longitude: str | None = None
+
+
+def _needs_cjk_font(*parts: str | None) -> bool:
+    text = "".join(part or "" for part in parts)
+    return any(ord(ch) > 0x024F for ch in text if ch.isalpha())
+
+
+@lru_cache(maxsize=1)
+def _find_cjk_font_path() -> str | None:
+    candidate_keywords = [
+        "pingfang",
+        "hiragino sans gb",
+        "stheiti",
+        "songti",
+        "heiti",
+        "notosanscjk",
+        "notoserifcjk",
+        "sourcehansans",
+        "sourcehanserif",
+        "arial unicode",
+    ]
+    for font_path in fm.findSystemFonts(fontext="ttf") + fm.findSystemFonts(fontext="ttc"):
+        basename = os.path.basename(font_path).lower()
+        if any(keyword in basename for keyword in candidate_keywords):
+            return font_path
+    return None
+
+
+def _choose_fonts(city_label: str, country_label: str) -> dict[str, str] | None:
+    if not _needs_cjk_font(city_label, country_label):
+        return None
+
+    cjk_font_path = _find_cjk_font_path()
+    if cjk_font_path:
+        return {
+            "bold": cjk_font_path,
+            "regular": cjk_font_path,
+            "light": cjk_font_path,
+        }
+
+    # Last fallback: try downloading a CJK web font if system CJK fonts are unavailable.
+    downloaded = cmp.load_fonts("Noto Sans SC")
+    return downloaded
 
 
 @app.get("/health")
@@ -224,6 +269,9 @@ def generate_poster(
     point = _resolve_point(city, country, latitude, longitude)
 
     theme_data = cmp.load_theme(theme)
+    city_label = display_city or city
+    country_label = display_country or country
+    chosen_fonts = _choose_fonts(city_label, country_label)
     media_type = {
         "png": "image/png",
         "svg": "image/svg+xml",
@@ -248,6 +296,7 @@ def generate_poster(
                 height=height,
                 display_city=display_city,
                 display_country=display_country,
+                fonts=chosen_fonts,
             )
     except Exception as exc:  # noqa: BLE001
         output_path.unlink(missing_ok=True)
@@ -277,6 +326,9 @@ def generate_poster_base64(payload: PosterBase64Request) -> dict[str, str]:
 
     point = _resolve_point(payload.city, payload.country, payload.latitude, payload.longitude)
     theme_data = cmp.load_theme(payload.theme)
+    city_label = payload.display_city or payload.city
+    country_label = payload.display_country or payload.country
+    chosen_fonts = _choose_fonts(city_label, country_label)
 
     temp_file = NamedTemporaryFile(prefix="poster_", suffix=".png", delete=False)
     output_path = Path(temp_file.name)
@@ -296,6 +348,7 @@ def generate_poster_base64(payload: PosterBase64Request) -> dict[str, str]:
                 height=payload.height,
                 display_city=payload.display_city,
                 display_country=payload.display_country,
+                fonts=chosen_fonts,
             )
 
         image_bytes = output_path.read_bytes()
