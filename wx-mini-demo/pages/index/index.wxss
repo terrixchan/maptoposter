@@ -1,0 +1,122 @@
+.page {
+  padding: 24rpx;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 18rpx;
+  padding: 22rpx;
+  box-shadow: 0 10rpx 28rpx rgba(15, 23, 42, 0.08);
+  margin-bottom: 18rpx;
+}
+
+.title {
+  font-size: 42rpx;
+  font-weight: 700;
+}
+
+.subtitle {
+  margin-top: 8rpx;
+  color: #64748b;
+  font-size: 26rpx;
+}
+
+.module {
+  margin-top: 18rpx;
+  border: 2rpx solid #e2e8f0;
+  border-radius: 14rpx;
+  padding: 14rpx;
+}
+
+.module-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10rpx;
+}
+
+.module-title {
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.module-tip {
+  font-size: 24rpx;
+  color: #475569;
+}
+
+.picker {
+  border: 2rpx solid #cbd5e1;
+  border-radius: 12rpx;
+  padding: 14rpx;
+  background: #f8fafc;
+  font-size: 28rpx;
+}
+
+.theme-desc {
+  margin-top: 10rpx;
+  color: #64748b;
+  font-size: 24rpx;
+}
+
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8rpx;
+  margin-top: 10rpx;
+}
+
+.swatch {
+  height: 30rpx;
+  border-radius: 8rpx;
+  border: 1rpx solid #cbd5e1;
+}
+
+.range-note {
+  margin-top: 8rpx;
+  display: flex;
+  justify-content: space-between;
+  color: #64748b;
+  font-size: 22rpx;
+}
+
+.actions {
+  margin-top: 18rpx;
+  display: flex;
+  gap: 12rpx;
+}
+
+.btn {
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.btn.primary {
+  background: #0f766e;
+  color: #ffffff;
+}
+
+.btn.secondary {
+  background: #334155;
+  color: #ffffff;
+}
+
+.btn.small {
+  width: 180rpx;
+  height: 68rpx;
+  line-height: 68rpx;
+  font-size: 24rpx;
+}
+
+.status {
+  margin-top: 12rpx;
+  color: #64748b;
+  font-size: 24rpx;
+  min-height: 34rpx;
+}
+
+.poster {
+  width: 100%;
+  border-radius: 12rpx;
+}

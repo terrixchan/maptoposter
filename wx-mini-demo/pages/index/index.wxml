@@ -1,0 +1,56 @@
+<view class="page">
+  <view class="card">
+    <view class="title">地图海报生成</view>
+    <view class="subtitle">自动使用当前定位作为中心点</view>
+
+    <view class="module">
+      <view class="module-head">
+        <text class="module-title">1. 定位</text>
+        <text class="module-tip">{{ locationText }}</text>
+      </view>
+      <button class="btn secondary small" bindtap="onRelocate">重新定位</button>
+    </view>
+
+    <view class="module">
+      <view class="module-head">
+        <text class="module-title">2. 样式选择</text>
+        <text class="module-tip">{{ selectedTheme }}</text>
+      </view>
+      <picker mode="selector" range="{{ themeLabels }}" value="{{ themeIndex }}" bindchange="onThemeChange">
+        <view class="picker">{{ themeLabels[themeIndex] || "加载主题中..." }}</view>
+      </picker>
+      <view class="theme-desc">{{ themeDescription }}</view>
+      <view class="swatches">
+        <view class="swatch" style="background: {{ themePreview.bg }}"></view>
+        <view class="swatch" style="background: {{ themePreview.text }}"></view>
+        <view class="swatch" style="background: {{ themePreview.water }}"></view>
+        <view class="swatch" style="background: {{ themePreview.parks }}"></view>
+        <view class="swatch" style="background: {{ themePreview.road_primary }}"></view>
+        <view class="swatch" style="background: {{ themePreview.road_secondary }}"></view>
+      </view>
+    </view>
+
+    <view class="module">
+      <view class="module-head">
+        <text class="module-title">3. 道路密度缩放</text>
+        <text class="module-tip">{{ distance }}m</text>
+      </view>
+      <slider min="4000" max="20000" step="1000" value="{{ distance }}" show-value bindchanging="onDistanceChanging" bindchange="onDistanceChange" />
+      <view class="range-note">
+        <text>更密（4000）</text>
+        <text>更广（20000）</text>
+      </view>
+    </view>
+
+    <view class="actions">
+      <button class="btn primary" loading="{{ loading }}" bindtap="onGenerate">生成海报</button>
+      <button class="btn secondary" disabled="{{ !posterPath }}" bindtap="onSave">保存图片</button>
+    </view>
+
+    <view class="status">{{ statusText }}</view>
+  </view>
+
+  <view class="card" wx:if="{{ posterPath }}">
+    <image class="poster" src="{{ posterPath }}" mode="widthFix" />
+  </view>
+</view>

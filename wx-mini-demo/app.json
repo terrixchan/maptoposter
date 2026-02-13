@@ -1,0 +1,13 @@
+{
+  "pages": [
+    "pages/index/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "Map Poster",
+    "navigationBarBackgroundColor": "#f1f5f9",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f1f5f9"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}
